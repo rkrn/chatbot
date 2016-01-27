@@ -26,8 +26,12 @@ Installation
 4. Find the desired target user (https://api.slack.com/methods/users.list/test) 
    and write his or her user ID to `userid.txt`:
 
+```
    $ echo TARGET_USER_ID > userid.txt
+```
 
 5. Run the bot:
 
+```
     $ node app.js
+```
