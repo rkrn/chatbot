@@ -25,10 +25,13 @@ Installation
     $ node app.js
 ```
 
-4. Push your changes to Heroku:
+4. Create a `token.txt` and write your API token to this file
 
 ```
-    $ heroku create
-    $ heroku config:set CHAT_BOT_TOKEN=[Your API token]
-    $ git push heroku master
+    $ echo YOUR_API_TOKEN > token.txt
 ```
+
+5. Find the desired target user (https://api.slack.com/methods/users.list/test) 
+   and write his or her user ID to `userid.txt`:
+
+   $ echo TARGET_USER_ID > userid.txt
