@@ -5,7 +5,7 @@ const Slack = require('slack-client');
 const SlackApiRx = require('./slack-api-rx');
 
 const MessageHelpers = require('./message-helpers');
-const PlayerInteraction = require('./interaction');
+const Interaction = require('./interaction');
 
 var fs = require('fs');
 var targetUser = '' || fs.readFileSync('userid.txt', 'utf8').trim();
@@ -17,9 +17,6 @@ class ChatBot {
 
   constructor(token) {
     this.slack = new Slack(token, true, true);
-    
-    this.gameConfig = {};
-    this.gameConfigParams = ['timeout'];
   }
 
   // Public: Brings this bot online and starts handling messages sent to it.
@@ -31,8 +28,7 @@ class ChatBot {
     this.respondToMessages();
   }
 
-  // Private: Listens for messages directed at this bot that contain the word
-  // 'deal,' and poll players in response.
+  // Private: Listens for messages from target user.
   //
   // Returns a {Disposable} that will end this subscription
   respondToMessages() {
@@ -44,21 +40,22 @@ class ChatBot {
 
     let disp = new rx.CompositeDisposable();
         
-    disp.add(this.handleDealGameMessages(messages, atMentions));
+    disp.add(this.handleMatchingMessages(messages, atMentions));
     
     return disp;
   }
   
-  // Private: Looks for messages directed at the bot that contain the word
-  // "deal." When found, start polling players for a game.
+  // Private: Looks for messages from the target user and makes 
+  // predefined response.
   //
   // messages - An {Observable} representing messages posted to a channel
   // atMentions - An {Observable} representing messages directed at the bot
   //
   // Returns a {Disposable} that will end this subscription
-  handleDealGameMessages(messages, atMentions) {
+  handleMatchingMessages(messages, atMentions) {
     return atMentions
-      //.where(e => e.text && e.text.toLowerCase().match(/\bdeal\b/))
+      // Look for messages containing the word "xyz"
+      //.where(e => e.text && e.text.toLowerCase().match(/\bxyz\b/))
       .where(e => e.text && e.text.toLowerCase())
       .map(e => this.slack.getChannelGroupOrDMByID(e.channel))
       .where(channel => {
@@ -67,28 +64,28 @@ class ChatBot {
         } 
         return true;
       })
-      .flatMap(channel => this.pollPlayersForGame(messages, channel))
+      .flatMap(channel => this.pollForFurtherMessages(messages, channel))
       .subscribe();
   }
   
-  // Private: Polls players to join the game, and if we have enough, starts an
-  // instance.
+  // Private: Posts predefined message and waits for a while before making
+  // further responses.
   //
   // messages - An {Observable} representing messages posted to the channel
-  // channel - The channel where the deal message was posted
+  // channel - The channel where the deal message was posted.
   //
-  // Returns an {Observable} that signals completion of the game 
-  pollPlayersForGame(messages, channel) {
+  // Returns an {Observable} that signals completion of the waiting period.
+  pollForFurtherMessages(messages, channel) {
     this.isPolling = true;
     
     // `reduce` can be taken out
-    return PlayerInteraction.pollPotentialPlayers(messages, channel)
-      .reduce((players, id) => {
+    return Interaction.pollPotentialUsers(messages, channel)
+      .reduce((users, id) => {
         let user = this.slack.getUserByID(id);
-        players.push({id: user.id, name: user.name});
-        return players;
+        users.push({id: user.id, name: user.name});
+        return users;
       }, [])
-      .flatMap(players => {
+      .flatMap(users => {
         this.isPolling = false;
         return rx.Observable.return(null);
       });

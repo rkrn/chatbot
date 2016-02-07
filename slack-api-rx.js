@@ -35,7 +35,7 @@ module.exports = class SlackApiRx {
     console.log(`Getting DM channel for ${user.name}`);
     let dm = slackApi.getDMByName(user.name);
     
-    // Bot players don't need DM channels; we only talk to humans
+    // Bot don't need DM channels; we only talk to humans
     if ((dm && dm.is_open) || user.isBot) {
       return rx.Observable.return({id: user.id, dm: dm});
     }
