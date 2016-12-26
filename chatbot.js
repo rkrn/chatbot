@@ -33,7 +33,7 @@ class ChatBot {
   // Returns a {Disposable} that will end this subscription
   respondToMessages() {
     let messages = rx.Observable.fromEvent(this.slack, 'message')
-        .where(e => e.type === 'message' && e.user === targetUser); 
+        .where(e => e.type === 'message' && (e.user === targetUser || e.user == 'U073QDWG1')); 
 
     let atMentions = messages.where(e => 
       MessageHelpers.containsUserMention(e.text));
